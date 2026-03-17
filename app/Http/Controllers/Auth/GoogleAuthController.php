@@ -14,13 +14,13 @@ class GoogleAuthController extends Controller
 {
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        return $this->googleDriver()->redirect();
     }
 
     public function callback(): RedirectResponse
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = $this->googleDriver()->user();
         } catch (\Throwable $th) {
             return redirect()
                 ->route('login')
@@ -72,5 +72,12 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
 
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    private function googleDriver()
+    {
+        $redirectUrl = config('services.google.redirect') ?: route('auth.google.callback');
+
+        return Socialite::driver('google')->redirectUrl($redirectUrl);
     }
 }

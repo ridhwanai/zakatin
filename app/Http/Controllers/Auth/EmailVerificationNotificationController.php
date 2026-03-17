@@ -7,6 +7,7 @@ use App\Notifications\EmailVerificationCodeNotification;
 use App\Support\EmailVerificationCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -26,7 +27,13 @@ class EmailVerificationNotificationController extends Controller
                 $verificationCode,
                 EmailVerificationCode::EXPIRY_MINUTES
             ));
-        } catch (\Throwable) {
+        } catch (\Throwable $th) {
+            Log::error('Failed to resend verification code.', [
+                'user_id' => $request->user()->id,
+                'email' => $request->user()->email,
+                'error' => $th->getMessage(),
+            ]);
+
             return back()->with('error', 'Pengiriman kode verifikasi gagal. Coba lagi.');
         }
 

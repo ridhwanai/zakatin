@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -51,7 +52,13 @@ class RegisteredUserController extends Controller
                 $verificationCode,
                 EmailVerificationCode::EXPIRY_MINUTES
             ));
-        } catch (\Throwable) {
+        } catch (\Throwable $th) {
+            Log::error('Failed to send verification code after registration.', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $th->getMessage(),
+            ]);
+
             return redirect()
                 ->route('verification.notice')
                 ->with('warning', 'Akun berhasil dibuat, tetapi pengiriman kode gagal. Silakan kirim ulang kode.');

@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Notifications\EmailVerificationCodeNotification;
-use App\Support\EmailVerificationCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -46,26 +43,8 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        $verificationCode = EmailVerificationCode::issue($user);
-        try {
-            $user->notify(new EmailVerificationCodeNotification(
-                $verificationCode,
-                EmailVerificationCode::EXPIRY_MINUTES
-            ));
-        } catch (\Throwable $th) {
-            Log::error('Failed to send verification code after registration.', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'error' => $th->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('verification.notice')
-                ->with('warning', 'Akun berhasil dibuat, tetapi pengiriman kode gagal. Silakan kirim ulang kode.');
-        }
-
         return redirect()
-            ->route('verification.notice')
-            ->with('status', 'verification-code-sent');
+            ->intended(route('dashboard', absolute: false))
+            ->with('success', 'Akun berhasil dibuat.');
     }
 }

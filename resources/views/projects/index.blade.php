@@ -7,17 +7,13 @@
                 <p class="text-muted mb-0">Lihat ringkasan project terlebih dahulu, lalu login saat siap menambahkan data.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                @if ($canManageProjects)
+                @if ($isAuthenticated)
                     <form method="POST" action="{{ route('projects.store') }}" class="m-0">
                         @csrf
                         <button type="submit" class="btn btn-dark rounded-pill px-4">
                             Tambah Project
                         </button>
                     </form>
-                @elseif ($isAuthenticated)
-                    <a href="{{ route('verification.notice') }}" class="btn btn-warning rounded-pill px-4">
-                        Verifikasi Email Dulu
-                    </a>
                 @else
                     <a href="{{ route('login') }}" class="btn btn-dark rounded-pill px-4">
                         Login untuk Tambah Project
@@ -51,13 +47,7 @@
                     <div class="card-body">
                         <p class="text-muted small mb-1">Status Akun</p>
                         <h2 class="h6 fw-bold mb-0">
-                            @if (! $isAuthenticated)
-                                Belum Login
-                            @elseif ($canManageProjects)
-                                Aktif
-                            @else
-                                Menunggu Verifikasi
-                            @endif
+                            {{ $isAuthenticated ? 'Aktif' : 'Belum Login' }}
                         </h2>
                     </div>
                 </div>
@@ -109,13 +99,11 @@
                         <p class="text-muted mb-4">
                             {{ $isAuthenticated ? 'Mulai dengan membuat project baru untuk tahun Hijriah saat ini.' : 'Silakan login untuk membuat project pertama Anda.' }}
                         </p>
-                        @if ($canManageProjects)
+                        @if ($isAuthenticated)
                             <form method="POST" action="{{ route('projects.store') }}" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-dark rounded-pill px-4">Buat Project Pertama</button>
                             </form>
-                        @elseif ($isAuthenticated)
-                            <a href="{{ route('verification.notice') }}" class="btn btn-warning rounded-pill px-4">Verifikasi Email Dulu</a>
                         @else
                             <a href="{{ route('login') }}" class="btn btn-dark rounded-pill px-4">Login untuk Mulai</a>
                         @endif
@@ -136,7 +124,7 @@
                                         <p class="text-muted mb-1 small">Tahun Hijriah: <strong>{{ $project->hijri_year }} H</strong></p>
                                         <p class="text-muted mb-4 small">Jumlah Record: <strong>{{ $project->zakat_records_count }}</strong></p>
 
-                                        @if ($canManageProjects)
+                                        @if ($isAuthenticated)
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('projects.show', $project) }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Lihat Detail</a>
                                                 <form method="POST" action="{{ route('projects.destroy', $project) }}" onsubmit="return confirm('Hapus project ini? Semua data transaksi akan ikut terhapus.');">
@@ -145,10 +133,6 @@
                                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Hapus</button>
                                                 </form>
                                             </div>
-                                        @else
-                                            <a href="{{ route('verification.notice') }}" class="btn btn-warning btn-sm rounded-pill px-3">
-                                                Verifikasi untuk Akses
-                                            </a>
                                         @endif
                                     </div>
                                 </div>

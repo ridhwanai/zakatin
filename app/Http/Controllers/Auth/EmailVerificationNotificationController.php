@@ -20,21 +20,21 @@ class EmailVerificationNotificationController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        $verificationCode = EmailVerificationCode::issue($request->user());
-
         try {
+            $verificationCode = EmailVerificationCode::issue($request->user());
+
             $request->user()->notify(new EmailVerificationCodeNotification(
                 $verificationCode,
                 EmailVerificationCode::EXPIRY_MINUTES
             ));
         } catch (\Throwable $th) {
-            Log::error('Failed to resend verification code.', [
+            Log::error('Failed to issue or resend verification code.', [
                 'user_id' => $request->user()->id,
                 'email' => $request->user()->email,
                 'error' => $th->getMessage(),
             ]);
 
-            return back()->with('error', 'Pengiriman kode verifikasi gagal. Coba lagi.');
+            return back()->with('error', 'Pengiriman kode verifikasi gagal. Cek konfigurasi email/database lalu coba lagi.');
         }
 
         return back()->with('status', 'verification-code-sent');

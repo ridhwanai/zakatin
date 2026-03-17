@@ -32,7 +32,6 @@ class ProjectController extends Controller
             'projects' => $projects,
             'currentHijriYear' => HijriCalendar::currentYear(),
             'isAuthenticated' => Auth::check(),
-            'canManageProjects' => Auth::check() && Auth::user()->hasVerifiedEmail(),
         ]);
     }
 

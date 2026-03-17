@@ -11,7 +11,7 @@ Route::get('/dashboard', [ProjectController::class, 'index'])->name('dashboard')
 Route::redirect('/misi-6/zakat.html', '/kalkulator-zakat', 301);
 Route::get('/kalkulator-zakat', [ZakatCalculatorController::class, 'zakatCalculator'])->name('zakat.calculator');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::patch('/projects/{project}/rates', [ProjectController::class, 'updateRates'])->name('projects.rates.update');

@@ -96,7 +96,7 @@ class ZakatRecordController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'people_count' => ['required', 'integer', 'min:1', 'max:1000'],
-            'method' => ['required', 'in:rice,money'],
+            'method' => ['required', 'in:rice,money,custom'],
             'rice_kg' => ['nullable', 'numeric', 'min:0'],
             'fitrah_money' => ['nullable', 'numeric', 'min:0'],
             'wajib_money' => ['nullable', 'numeric', 'min:0'],
@@ -146,6 +146,11 @@ class ZakatRecordController extends Controller
             $fitrahMoney = $project->money_rate_per_person !== null
                 ? round($peopleCount * (float) $project->money_rate_per_person, 2)
                 : (float) $validated['fitrah_money'];
+        }
+
+        if ($validated['method'] === 'custom') {
+            $riceKg = $validated['rice_kg'] !== null ? (float) $validated['rice_kg'] : null;
+            $fitrahMoney = $validated['fitrah_money'] !== null ? (float) $validated['fitrah_money'] : null;
         }
 
         return [

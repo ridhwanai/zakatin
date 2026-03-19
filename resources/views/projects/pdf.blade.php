@@ -64,6 +64,30 @@
                 <td class="text-right">{{ number_format($summary['total_people']) }}</td>
             </tr>
             <tr>
+                <th>Total Pendaftar (Beras)</th>
+                <td class="text-right">{{ number_format($summary['total_list_count_rice']) }}</td>
+                <th>Total Muzakki (Beras)</th>
+                <td class="text-right">{{ number_format($summary['total_people_rice']) }}</td>
+            </tr>
+            <tr>
+                <th>Total Pendaftar (Uang)</th>
+                <td class="text-right">{{ number_format($summary['total_list_count_money']) }}</td>
+                <th>Total Muzakki (Uang)</th>
+                <td class="text-right">{{ number_format($summary['total_people_money']) }}</td>
+            </tr>
+            <tr>
+                <th>Total Pendaftar (Custom)</th>
+                <td class="text-right">{{ number_format($summary['total_list_count_custom']) }}</td>
+                <th>Total Muzakki (Custom)</th>
+                <td class="text-right">{{ number_format($summary['total_people_custom']) }}</td>
+            </tr>
+            <tr>
+                <th>Total Pendaftar (Mal &gt; 0)</th>
+                <td class="text-right">{{ number_format($summary['total_list_count_mal']) }}</td>
+                <th>Total Muzakki (Mal &gt; 0)</th>
+                <td class="text-right">{{ number_format($summary['total_people_mal']) }}</td>
+            </tr>
+            <tr>
                 <th>Total Fitrah Beras (Kg)</th>
                 <td class="text-right">{{ number_format($summary['total_rice_kg'], 2, ',', '.') }}</td>
                 <td colspan="2"></td>
@@ -102,7 +126,13 @@
                     <td class="text-right">{{ $loop->iteration }}</td>
                     <td>{{ $record->name }}</td>
                     <td class="text-right">{{ number_format($record->people_count) }}</td>
-                    <td>{{ $record->method === 'rice' ? 'Beras' : 'Tunai' }}</td>
+                    <td>
+                        {{
+                            $record->method === 'rice'
+                                ? 'Beras'
+                                : ($record->method === 'money' ? 'Tunai' : 'Custom')
+                        }}
+                    </td>
                     <td class="text-right">{{ $record->rice_kg !== null ? number_format((float) $record->rice_kg, 2, ',', '.') : '-' }}</td>
                     <td class="text-right">{{ $record->fitrah_money !== null ? 'Rp '.number_format((float) $record->fitrah_money, 0, ',', '.') : '-' }}</td>
                     <td class="text-right">Rp {{ number_format((float) $record->wajib_money, 0, ',', '.') }}</td>

@@ -27,6 +27,12 @@
                     <div class="summary-icon"><i class="fa-solid fa-list"></i></div>
                     <p class="summary-label">Total Pendaftar</p>
                     <h2 class="summary-value">{{ number_format($summary['total_list_count']) }}</h2>
+                    <div class="summary-breakdown">
+                        <span>Beras: {{ number_format($summary['total_list_count_rice']) }}</span>
+                        <span>Uang: {{ number_format($summary['total_list_count_money']) }}</span>
+                        <span>Custom: {{ number_format($summary['total_list_count_custom']) }}</span>
+                        <span>Mal (&gt; 0): {{ number_format($summary['total_list_count_mal']) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-lg-4 col-xl-2">
@@ -34,6 +40,12 @@
                     <div class="summary-icon"><i class="fa-solid fa-users"></i></div>
                     <p class="summary-label">Total Muzakki</p>
                     <h2 class="summary-value">{{ number_format($summary['total_people']) }}</h2>
+                    <div class="summary-breakdown">
+                        <span>Beras: {{ number_format($summary['total_people_rice']) }}</span>
+                        <span>Uang: {{ number_format($summary['total_people_money']) }}</span>
+                        <span>Custom: {{ number_format($summary['total_people_custom']) }}</span>
+                        <span>Mal (&gt; 0): {{ number_format($summary['total_people_mal']) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-lg-4 col-xl-2">
@@ -168,6 +180,7 @@
                                     <select id="method" name="method" class="form-select @error('method') is-invalid @enderror" required>
                                         <option value="rice" @selected(old('method', 'rice') === 'rice')>Beras</option>
                                         <option value="money" @selected(old('method') === 'money')>Tunai (Uang)</option>
+                                        <option value="custom" @selected(old('method') === 'custom')>Custom</option>
                                     </select>
                                     @error('method')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -281,6 +294,7 @@
                             <option value="">Semua Metode</option>
                             <option value="rice">Beras</option>
                             <option value="money">Tunai (Uang)</option>
+                            <option value="custom">Custom</option>
                         </select>
                     </div>
                     <div class="col-12 col-md-3">
@@ -324,8 +338,20 @@
                                 <td class="fw-medium">{{ $record->name }}</td>
                                 <td>{{ number_format($record->people_count) }}</td>
                                 <td>
-                                    <span class="badge rounded-pill {{ $record->method === 'rice' ? 'text-bg-warning' : 'text-bg-primary' }}">
-                                        {{ $record->method === 'rice' ? 'Beras' : 'Tunai' }}
+                                    @php
+                                        $methodBadgeClass = match ($record->method) {
+                                            'rice' => 'text-bg-warning',
+                                            'money' => 'text-bg-primary',
+                                            default => 'text-bg-secondary',
+                                        };
+                                        $methodLabel = match ($record->method) {
+                                            'rice' => 'Beras',
+                                            'money' => 'Tunai',
+                                            default => 'Custom',
+                                        };
+                                    @endphp
+                                    <span class="badge rounded-pill {{ $methodBadgeClass }}">
+                                        {{ $methodLabel }}
                                     </span>
                                 </td>
                                 <td>{{ $record->rice_kg !== null ? number_format((float) $record->rice_kg, 2, ',', '.') : '-' }}</td>
@@ -404,6 +430,7 @@
                                     <select id="edit_method" name="method" class="form-select" required>
                                         <option value="rice">Beras</option>
                                         <option value="money">Tunai (Uang)</option>
+                                        <option value="custom">Custom</option>
                                     </select>
                                 </div>
 
@@ -503,6 +530,19 @@
             line-height: 1.3;
         }
 
+        .project-detail-shell .summary-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            margin-top: 0.2rem;
+        }
+
+        .project-detail-shell .summary-breakdown span {
+            color: #5f6f66;
+            font-size: 0.72rem;
+            line-height: 1.2;
+        }
+
         .project-detail-shell .detail-table thead th {
             background: rgba(31, 91, 69, 0.08);
             color: #214535;
@@ -596,6 +636,13 @@
             }
 
             function refreshHelperText() {
+                if (methodSelect.value === 'custom') {
+                    riceHelp.textContent = 'Custom: isi manual, tidak memakai nominal otomatis.';
+                    moneyHelp.textContent = 'Custom: isi manual, tidak memakai nominal otomatis.';
+
+                    return;
+                }
+
                 if (hasRiceRate) {
                     riceHelp.textContent = `Otomatis: jumlah orang x ${riceRatePerPerson} kg`;
                 } else {
@@ -610,6 +657,13 @@
             }
 
             function refreshEditHelperText() {
+                if (editMethodSelect.value === 'custom') {
+                    editRiceHelp.textContent = 'Custom: isi manual, tidak memakai nominal otomatis.';
+                    editMoneyHelp.textContent = 'Custom: isi manual, tidak memakai nominal otomatis.';
+
+                    return;
+                }
+
                 if (hasRiceRate) {
                     editRiceHelp.textContent = `Otomatis: jumlah orang x ${riceRatePerPerson} kg`;
                 } else {
@@ -624,23 +678,27 @@
             }
 
             function syncPaymentFields(forceRecalculate) {
-                const isRice = methodSelect.value === 'rice';
+                const method = methodSelect.value;
+                const isRice = method === 'rice';
+                const isMoney = method === 'money';
+                const isCustom = method === 'custom';
                 const peopleCount = getPeopleCount();
 
-                riceGroup.style.display = isRice ? '' : 'none';
-                moneyGroup.style.display = isRice ? 'none' : '';
+                riceGroup.style.display = isRice || isCustom ? '' : 'none';
+                moneyGroup.style.display = isMoney || isCustom ? '' : 'none';
 
-                riceInput.disabled = !isRice;
-                moneyInput.disabled = isRice;
+                riceInput.disabled = !(isRice || isCustom);
+                moneyInput.disabled = !(isMoney || isCustom);
+
+                riceInput.required = false;
+                moneyInput.required = false;
 
                 if (isRice) {
                     moneyInput.value = '';
-                    moneyInput.required = false;
                     moneyInput.readOnly = false;
 
                     if (hasRiceRate) {
                         riceInput.readOnly = true;
-                        riceInput.required = false;
 
                         if (forceRecalculate || riceInput.value === '') {
                             riceInput.value = calculatedRice(peopleCount);
@@ -649,14 +707,12 @@
                         riceInput.readOnly = false;
                         riceInput.required = true;
                     }
-                } else {
+                } else if (isMoney) {
                     riceInput.value = '';
-                    riceInput.required = false;
                     riceInput.readOnly = false;
 
                     if (hasMoneyRate) {
                         moneyInput.readOnly = true;
-                        moneyInput.required = false;
 
                         if (forceRecalculate || moneyInput.value === '') {
                             moneyInput.value = calculatedMoney(peopleCount);
@@ -665,7 +721,12 @@
                         moneyInput.readOnly = false;
                         moneyInput.required = true;
                     }
+                } else {
+                    riceInput.readOnly = false;
+                    moneyInput.readOnly = false;
                 }
+
+                refreshHelperText();
             }
 
             function getEditPeopleCount() {
@@ -679,23 +740,27 @@
             }
 
             function syncEditPaymentFields(forceRecalculate) {
-                const isRice = editMethodSelect.value === 'rice';
+                const method = editMethodSelect.value;
+                const isRice = method === 'rice';
+                const isMoney = method === 'money';
+                const isCustom = method === 'custom';
                 const peopleCount = getEditPeopleCount();
 
-                editRiceGroup.style.display = isRice ? '' : 'none';
-                editMoneyGroup.style.display = isRice ? 'none' : '';
+                editRiceGroup.style.display = isRice || isCustom ? '' : 'none';
+                editMoneyGroup.style.display = isMoney || isCustom ? '' : 'none';
 
-                editRiceInput.disabled = !isRice;
-                editMoneyInput.disabled = isRice;
+                editRiceInput.disabled = !(isRice || isCustom);
+                editMoneyInput.disabled = !(isMoney || isCustom);
+
+                editRiceInput.required = false;
+                editMoneyInput.required = false;
 
                 if (isRice) {
                     editMoneyInput.value = '';
-                    editMoneyInput.required = false;
                     editMoneyInput.readOnly = false;
 
                     if (hasRiceRate) {
                         editRiceInput.readOnly = true;
-                        editRiceInput.required = false;
 
                         if (forceRecalculate || editRiceInput.value === '') {
                             editRiceInput.value = calculatedRice(peopleCount);
@@ -704,14 +769,12 @@
                         editRiceInput.readOnly = false;
                         editRiceInput.required = true;
                     }
-                } else {
+                } else if (isMoney) {
                     editRiceInput.value = '';
-                    editRiceInput.required = false;
                     editRiceInput.readOnly = false;
 
                     if (hasMoneyRate) {
                         editMoneyInput.readOnly = true;
-                        editMoneyInput.required = false;
 
                         if (forceRecalculate || editMoneyInput.value === '') {
                             editMoneyInput.value = calculatedMoney(peopleCount);
@@ -720,7 +783,12 @@
                         editMoneyInput.readOnly = false;
                         editMoneyInput.required = true;
                     }
+                } else {
+                    editRiceInput.readOnly = false;
+                    editMoneyInput.readOnly = false;
                 }
+
+                refreshEditHelperText();
             }
 
             function openEditRecordModal(row) {

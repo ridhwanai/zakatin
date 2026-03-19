@@ -79,8 +79,48 @@
             <td colspan="6"></td>
         </tr>
         <tr>
+            <td class="summary-label">Total Pendaftar (Beras)</td>
+            <td class="text-right num">{{ (int) $summary['total_list_count_rice'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Pendaftar (Uang)</td>
+            <td class="text-right num">{{ (int) $summary['total_list_count_money'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Pendaftar (Custom)</td>
+            <td class="text-right num">{{ (int) $summary['total_list_count_custom'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Pendaftar (Mal > 0)</td>
+            <td class="text-right num">{{ (int) $summary['total_list_count_mal'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
             <td class="summary-label">Total Muzakki</td>
             <td class="text-right num">{{ (int) $summary['total_people'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Muzakki (Beras)</td>
+            <td class="text-right num">{{ (int) $summary['total_people_rice'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Muzakki (Uang)</td>
+            <td class="text-right num">{{ (int) $summary['total_people_money'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Muzakki (Custom)</td>
+            <td class="text-right num">{{ (int) $summary['total_people_custom'] }}</td>
+            <td colspan="6"></td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Muzakki (Mal > 0)</td>
+            <td class="text-right num">{{ (int) $summary['total_people_mal'] }}</td>
             <td colspan="6"></td>
         </tr>
         <tr>
@@ -124,7 +164,13 @@
                     <td class="text-center num">{{ $loop->iteration }}</td>
                     <td class="text-left">{{ $record->name }}</td>
                     <td class="text-center num">{{ (int) $record->people_count }}</td>
-                    <td class="text-center">{{ $record->method === 'rice' ? 'Beras' : 'Tunai' }}</td>
+                    <td class="text-center">
+                        {{
+                            $record->method === 'rice'
+                                ? 'Beras'
+                                : ($record->method === 'money' ? 'Tunai' : 'Custom')
+                        }}
+                    </td>
                     <td class="text-right dec">{{ $record->rice_kg !== null ? (float) $record->rice_kg : '' }}</td>
                     <td class="text-right rp">{{ $record->fitrah_money !== null ? (float) $record->fitrah_money : '' }}</td>
                     <td class="text-right rp">{{ (float) $record->wajib_money }}</td>

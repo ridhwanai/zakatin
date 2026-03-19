@@ -29,6 +29,8 @@ if (projects.length === 0) {
   return;
 }
 
+const PARAM_STORAGE_KEY = "zakatinSimulationParamsV1";
+
 const els = {
   projectSelect: document.getElementById("projectSelect"),
   selectedProjectTitle: document.getElementById("selectedProjectTitle"),
@@ -47,12 +49,15 @@ const els = {
   fitrahRecipients: document.getElementById("fitrahRecipients"),
   malRecipients: document.getElementById("malRecipients"),
   combinedRecipients: document.getElementById("combinedRecipients"),
+  saveCalculatorParams: document.getElementById("saveCalculatorParams"),
   resetCalculatorParams: document.getElementById("resetCalculatorParams"),
+  simulationParamStatus: document.getElementById("simulationParamStatus"),
   resultFitrahMoney: document.getElementById("resultFitrahMoney"),
   resultRicePrice: document.getElementById("resultRicePrice"),
   resultFitrahMoneyToRice: document.getElementById("resultFitrahMoneyToRice"),
   resultFitrahCombinedRice: document.getElementById("resultFitrahCombinedRice"),
   resultFitrahRecipients: document.getElementById("resultFitrahRecipients"),
+  resultFitrahTotalRiceForShare: document.getElementById("resultFitrahTotalRiceForShare"),
   resultFitrahRicePerRecipient: document.getElementById("resultFitrahRicePerRecipient"),
   resultFitrahMoneyPerRecipient: document.getElementById("resultFitrahMoneyPerRecipient"),
   resultFitrahMoneyRicePerRecipient: document.getElementById("resultFitrahMoneyRicePerRecipient"),
@@ -116,6 +121,73 @@ function formatInteger(value) {
 
 function formatKg(value) {
   return `${kgFormatter.format(Math.max(0, value))} Kg`;
+}
+
+function setParamStatus(message, variant = "muted") {
+  const classByVariant = {
+    muted: "text-muted",
+    success: "text-success",
+    danger: "text-danger",
+  };
+
+  const resolvedClass = classByVariant[variant] || classByVariant.muted;
+  els.simulationParamStatus.className = `small mb-0 mt-3 ${resolvedClass}`;
+  els.simulationParamStatus.textContent = message;
+}
+
+function readParamStore() {
+  try {
+    const raw = window.localStorage.getItem(PARAM_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeParamStore(store) {
+  try {
+    window.localStorage.setItem(PARAM_STORAGE_KEY, JSON.stringify(store));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getCurrentParams() {
+  return {
+    ricePricePerKg: Math.round(Math.max(1, toNumber(els.ricePricePerKg.value))),
+    fitrahRecipients: toPositiveInt(els.fitrahRecipients.value, 8),
+    malRecipients: toPositiveInt(els.malRecipients.value, 8),
+    combinedRecipients: toPositiveInt(els.combinedRecipients.value, 8),
+  };
+}
+
+function applyParamsToInputs(params) {
+  els.ricePricePerKg.value = String(Math.round(Math.max(1, toNumber(params.ricePricePerKg))));
+  els.fitrahRecipients.value = String(toPositiveInt(params.fitrahRecipients, 8));
+  els.malRecipients.value = String(toPositiveInt(params.malRecipients, 8));
+  els.combinedRecipients.value = String(toPositiveInt(params.combinedRecipients, 8));
+}
+
+function getSavedParams(projectId) {
+  const store = readParamStore();
+  const raw = store[String(projectId)];
+
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  return {
+    ricePricePerKg: Math.round(Math.max(1, toNumber(raw.ricePricePerKg))),
+    fitrahRecipients: toPositiveInt(raw.fitrahRecipients, 8),
+    malRecipients: toPositiveInt(raw.malRecipients, 8),
+    combinedRecipients: toPositiveInt(raw.combinedRecipients, 8),
+  };
 }
 
 function normalizeSummary(summary) {
@@ -244,6 +316,7 @@ function calculateAndRender() {
   els.resultFitrahCombinedRice.textContent = formatKg(fitrahCombinedRiceKg);
 
   els.resultFitrahRecipients.textContent = `${formatInteger(fitrahRecipients)} Orang`;
+  els.resultFitrahTotalRiceForShare.textContent = formatKg(fitrahCombinedRiceKg);
   els.resultFitrahRicePerRecipient.textContent = formatKg(fitrahRicePerRecipient);
   els.resultFitrahMoneyPerRecipient.textContent = formatCurrency(fitrahMoneyPerRecipient);
   els.resultFitrahMoneyRicePerRecipient.textContent = formatKg(fitrahMoneyRicePerRecipient);
@@ -271,7 +344,20 @@ function applyProject(projectId, resetRicePrice = false) {
   updateProjectQueryParam(project.id);
 
   if (resetRicePrice) {
-    els.ricePricePerKg.value = String(Math.round(deriveDefaultRicePrice(project)));
+    const savedParams = getSavedParams(project.id);
+
+    if (savedParams) {
+      applyParamsToInputs(savedParams);
+      setParamStatus("Parameter tersimpan dimuat untuk project ini.", "success");
+    } else {
+      applyParamsToInputs({
+        ricePricePerKg: Math.round(deriveDefaultRicePrice(project)),
+        fitrahRecipients: 8,
+        malRecipients: 8,
+        combinedRecipients: 8,
+      });
+      setParamStatus("Belum ada parameter tersimpan untuk project ini.", "muted");
+    }
   }
 
   calculateAndRender();
@@ -279,11 +365,29 @@ function applyProject(projectId, resetRicePrice = false) {
 
 function resetParamsToDefault() {
   const project = getSelectedProject();
-  els.ricePricePerKg.value = String(Math.round(deriveDefaultRicePrice(project)));
-  els.fitrahRecipients.value = "8";
-  els.malRecipients.value = "8";
-  els.combinedRecipients.value = "8";
+  applyParamsToInputs({
+    ricePricePerKg: Math.round(deriveDefaultRicePrice(project)),
+    fitrahRecipients: 8,
+    malRecipients: 8,
+    combinedRecipients: 8,
+  });
+  setParamStatus("Parameter direset ke default. Klik Simpan jika ingin menyimpan default ini.", "muted");
   calculateAndRender();
+}
+
+function saveParamsForCurrentProject() {
+  const project = getSelectedProject();
+  calculateAndRender();
+
+  const store = readParamStore();
+  store[String(project.id)] = getCurrentParams();
+
+  const isSaved = writeParamStore(store);
+  if (isSaved) {
+    setParamStatus("Parameter simulasi berhasil disimpan untuk project ini.", "success");
+  } else {
+    setParamStatus("Gagal menyimpan parameter. Cek izin local storage browser.", "danger");
+  }
 }
 
 function init() {
@@ -296,10 +400,14 @@ function init() {
 
   [els.ricePricePerKg, els.fitrahRecipients, els.malRecipients, els.combinedRecipients].forEach(
     (input) => {
-      input.addEventListener("input", calculateAndRender);
+      input.addEventListener("input", () => {
+        calculateAndRender();
+        setParamStatus("Perubahan parameter belum disimpan.", "muted");
+      });
     }
   );
 
+  els.saveCalculatorParams.addEventListener("click", saveParamsForCurrentProject);
   els.resetCalculatorParams.addEventListener("click", resetParamsToDefault);
 
   applyProject(selectedProject.id, true);

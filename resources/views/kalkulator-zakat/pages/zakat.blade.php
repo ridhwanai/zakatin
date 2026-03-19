@@ -147,9 +147,17 @@
                                 >
                             </div>
 
-                            <button type="button" id="resetCalculatorParams" class="btn btn-outline-danger rounded-pill px-4">
-                                Reset Parameter
-                            </button>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" id="saveCalculatorParams" class="btn btn-dark rounded-pill px-4">
+                                    Simpan Parameter
+                                </button>
+                                <button type="button" id="resetCalculatorParams" class="btn btn-outline-danger rounded-pill px-4">
+                                    Reset Parameter
+                                </button>
+                            </div>
+                            <p id="simulationParamStatus" class="text-muted small mb-0 mt-3">
+                                Parameter belum disimpan.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -193,6 +201,10 @@
                                         <strong id="resultFitrahRecipients">0 Orang</strong>
                                     </div>
                                     <div class="result-item">
+                                        <span>Total Beras Dibagikan (Beras Zakat + Beras dari Zakat Uang)</span>
+                                        <strong id="resultFitrahTotalRiceForShare">0 Kg</strong>
+                                    </div>
+                                    <div class="result-item">
                                         <span>Per Orang Dapat Beras Langsung</span>
                                         <strong id="resultFitrahRicePerRecipient">0 Kg</strong>
                                     </div>
@@ -205,7 +217,7 @@
                                         <strong id="resultFitrahMoneyRicePerRecipient">0 Kg</strong>
                                     </div>
                                     <div class="result-item">
-                                        <span>Per Orang Total Setara Beras</span>
+                                        <span>Per Orang Dapat Total Beras (Beras Zakat + Beras dari Zakat Uang)</span>
                                         <strong id="resultFitrahCombinedRicePerRecipient">0 Kg</strong>
                                     </div>
                                 </div>

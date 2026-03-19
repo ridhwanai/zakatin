@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/{project}/rates', [ProjectController::class, 'updateRates'])->name('projects.rates.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::get('/projects/{project}/pdf', [ProjectController::class, 'pdf'])->name('projects.pdf');
+    Route::get('/projects/{project}/excel', [ProjectController::class, 'excel'])->name('projects.excel');
     Route::post('/projects/{project}/records', [ZakatRecordController::class, 'store'])->name('records.store');
     Route::patch('/projects/{project}/records/{record}', [ZakatRecordController::class, 'update'])->name('records.update');
     Route::delete('/projects/{project}/records/{record}', [ZakatRecordController::class, 'destroy'])->name('records.destroy');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProjectExcelExport;
 use App\Models\Project;
 use App\Support\HijriCalendar;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectController extends Controller
 {
@@ -122,6 +124,22 @@ class ProjectController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download(Str::slug($project->title).'-rekap-zakat.pdf');
+    }
+
+    public function excel(Project $project)
+    {
+        $this->ensureOwnership($project);
+
+        $project->load(['zakatRecords' => function ($query): void {
+            $query->oldest();
+        }]);
+
+        $summary = $project->summary();
+
+        return Excel::download(
+            new ProjectExcelExport($project, $summary, now()->format('d-m-Y H:i')),
+            Str::slug($project->title).'-rekap-zakat.xlsx'
+        );
     }
 
     private function ensureOwnership(Project $project): void

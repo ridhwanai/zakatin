@@ -1,16 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 gap-lg-3">
             <div>
                 <h1 class="h4 fw-bold mb-1">{{ $project->title }}</h1>
                 <p class="text-muted mb-0">Kelola rincian project, nominal zakat, dan daftar orang yang sudah zakat.</p>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-dark rounded-pill px-3">
-                    <i class="fa-solid fa-arrow-left me-2"></i>Kembali
+            <div class="project-header-actions d-flex flex-wrap justify-content-start justify-content-lg-end gap-2">
+                <a href="{{ route('dashboard') }}" class="project-header-btn btn btn-outline-dark rounded-pill">
+                    <i class="fa-solid fa-arrow-left"></i>Kembali
                 </a>
-                <a href="{{ route('projects.pdf', $project) }}" class="btn btn-dark rounded-pill px-3">
-                    <i class="fa-solid fa-file-pdf me-2"></i>Download PDF
+                <a href="{{ route('projects.pdf', $project) }}" class="project-header-btn btn btn-dark rounded-pill">
+                    <i class="fa-solid fa-file-pdf"></i>Download PDF
+                </a>
+                <a href="{{ route('projects.excel', $project) }}" class="project-header-btn btn btn-success rounded-pill">
+                    <i class="fa-solid fa-file-excel"></i>Download Excel
                 </a>
             </div>
         </div>
@@ -441,6 +444,28 @@
     </div>
 
     <style>
+        .project-header-actions .project-header-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            line-height: 1.2;
+            padding: 0.5rem 0.95rem;
+            border-width: 1px;
+        }
+
+        .project-header-actions .project-header-btn i {
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .project-header-actions .project-header-btn {
+                padding: 0.45rem 0.8rem;
+                font-size: 0.86rem;
+            }
+        }
+
         .project-detail-shell .summary-stat-card {
             border: 1px solid rgba(31, 91, 69, 0.2);
             background: linear-gradient(165deg, rgba(255, 255, 255, 0.97) 0%, rgba(249, 244, 232, 0.96) 100%);

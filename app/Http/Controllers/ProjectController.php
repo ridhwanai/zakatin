@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\ProjectExcelExport;
 use App\Models\Project;
 use App\Support\HijriCalendar;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -13,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectController extends Controller
 {
@@ -135,11 +133,19 @@ class ProjectController extends Controller
         }]);
 
         $summary = $project->summary();
+        $filename = Str::slug($project->title).'-rekap-zakat.xls';
+        $content = view('projects.excel', [
+            'project' => $project,
+            'summary' => $summary,
+            'exportedAt' => now()->format('d-m-Y H:i'),
+        ])->render();
 
-        return Excel::download(
-            new ProjectExcelExport($project, $summary, now()->format('d-m-Y H:i')),
-            Str::slug($project->title).'-rekap-zakat.xlsx'
-        );
+        return response("\xEF\xBB\xBF".$content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
+            'Pragma' => 'public',
+        ]);
     }
 
     private function ensureOwnership(Project $project): void
